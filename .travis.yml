@@ -1,0 +1,22 @@
+sudo: required
+services:
+    - docker
+
+before_install:
+    - docker build -t winrono/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+    - docker run -e CI=true winrono/react-test npm run test
+
+after_success:
+    - docker build -t winrono/multi-client ./client
+    - docker build -t winrono/multi-nginx ./nginx
+    - docker build -t winrono/multi-server ./server
+    - docker build -t winrono/multi-worker ./worker
+    # Log in to the docker CLI
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    #Push images to docker hub
+    - docker push winrono/multi-client
+    - docker push winrono/multi-nginx
+    - docker push winrono/multi-server
+    - docker push winrono/multi-worker
